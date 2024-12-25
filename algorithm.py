@@ -5,7 +5,7 @@ import pandas as pd
 #S - множество уже обработанных пользователей
 #user_set - множество людей, с кем встречался этот пользователь
 
-def alg():
+def alg(twice_user):
     conn = database.sqlite3.connect('database.sql')
     table = pd.read_sql("SELECT * FROM users",con=conn)
     conn.close()
@@ -15,11 +15,7 @@ def alg():
     #print(len(df_set))
     S = set()
 
-    twice_user = -1
-    #обработка случая, когда количество пользователей нечётно
-    if len(df_set)%2==1:
-        print("Кто пойдёт на две встречи? (укажите user_id)")
-        twice_user = int(input())
+    pairs = []
 
     for user in df:
         if user not in S:
@@ -34,6 +30,7 @@ def alg():
                 S.add(new_friend)
             else:
                 new_friend = twice_user
+            pairs.append((user, new_friend))
             #Добавление друг друга в таблицы
             #внизу обработка для текущего пользователя
             conn = database.sqlite3.connect(f'user{user}.sql')
@@ -49,3 +46,4 @@ def alg():
             conn.commit()
             cur.close()
             conn.close()
+    print(pairs)

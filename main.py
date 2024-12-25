@@ -1,7 +1,6 @@
 import telebot
 import database
 import algorithm
-import schedule
 
 
 bot = telebot.TeleBot('7994757091:AAHaZ-FjncULD9Q0F34Claq13iDy7E-jpGY')
@@ -19,7 +18,7 @@ def start(chat):
 def main(callback):
     murkup = telebot.types.InlineKeyboardMarkup()
     murkup.add(telebot.types.InlineKeyboardButton('Получить линк', callback_data='meeting'))
-    main_str = ('CampusMatch - связи решают всё 💵🎓\n\n')
+    main_str = ('CampusMatch - найди новых друзей🎓\n\n')
     bot.send_message(callback.message.chat.id, main_str, reply_markup=murkup)
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'choice') #Ответ на кнопку "Начать нетворкаться"
@@ -43,7 +42,7 @@ def callback_linc(callback):
         murkup = telebot.types.InlineKeyboardMarkup()
         murkup.add(telebot.types.InlineKeyboardButton('Попробовать снова', callback_data='meeting'))
         murkup.add(telebot.types.InlineKeyboardButton('Вернуться в главное меню', callback_data='main'))
-        info_str = (f'Достаточное киличество участников пока не набралось')
+        info_str = (f'Достаточное киличество участников пока не набралось, или тебе стоит подождать до следующей субботы 😉')
         bot.send_message(callback.message.chat.id, info_str, reply_markup=murkup)
     else:
         murkup = telebot.types.InlineKeyboardMarkup()
@@ -51,6 +50,16 @@ def callback_linc(callback):
         info_str = (f'Новые знакомства и возможности ждут тебя!\n\n @{linc}')
         bot.send_message(callback.message.chat.id, info_str, reply_markup=murkup)
 
-#schedule.every().saturday.at("00:01").do(algorithm.alg())
+@bot.message_handler(commands = ['update']) # Ответ на команду /update
+def update(chat):
+    id = chat.from_user.id
+    if id == 881088174:
+        twice_user = int((chat.text).split()[1])
+        algorithm.alg(twice_user)
+        update_str = 'Список успешно обновлён'
+        bot.send_message(chat.chat.id, update_str)
+    else:
+        not_update_str = 'Вы пытаетесь вызвать команду администратора'
+        bot.send_message(chat.chat.id, not_update_str)
 
 bot.polling(none_stop=True)
