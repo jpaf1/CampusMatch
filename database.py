@@ -1,63 +1,57 @@
 import sqlite3
 
-def add_user(id,username): #Добавление пользователя в таблицу
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
+class Database: #работа с базой данных
+    def __init__(self):
+        self.user_db = 'database.sql'
 
-    cur.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, user_id int, username VARCHAR(32))')
+    def add_user(self, user_id, username): #добавление пользователя в общую базу
+        with sqlite3.connect(self.user_db) as conn:
+            cur = conn.cursor()
+            cur.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT)')
+            cur.execute('INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)', (user_id, username))
 
-    # cur.execute("INSERT INTO users (user_id, username) VALUES ('%s', '%s')" % ('23242424', 'user1')) #тест 1
-    # cur.execute(f"INSERT INTO users (user_id, username) VALUES ('\'111111\'', '%s')" % ('11111111', 'user2')) #тест 1
+        self._create_user_table(user_id)
 
-    conn.commit()
-    cur.execute("INSERT INTO users (user_id, username) VALUES ('%s', '%s')" %(id,username))
-    conn.commit()
-    cur.close()
-    conn.close()
+    def _create_user_table(self, user_id): #создание БД для конкретного пользователя
+        with sqlite3.connect(f'user{user_id}.sql') as conn:
+            cur = conn.cursor()
+            cur.execute('CREATE TABLE IF NOT EXISTS user_links (id INTEGER PRIMARY KEY, user_id INTEGER)')
 
-    add_db_for_user(id)
+    def get_new_friend(self, user_id):
+        try:
+            with sqlite3.connect(f'user{user_id}.sql') as conn:
+                cur = conn.cursor()
 
-def add_db_for_user(id): #Создание таблицы для определённого пользователя, с кем он встречался
-    conn = sqlite3.connect(f'user{id}.sql')
-    cur = conn.cursor()
+                # Получение последнего id записи
+                cur.execute('SELECT MAX(id) FROM user_links')
+                last_id = cur.fetchone()[0]
 
-    cur.execute(f'DROP TABLE IF EXISTS user{id}')  # Todo Удалить строчку перед выводом в продакшн
+                if last_id is None:
+                    return None  # Если таблица пуста, возвращаем None
 
-    cur.execute(f'CREATE TABLE IF NOT EXISTS user{id} (id INTEGER PRIMARY KEY, user_id int)')
-    conn.commit()
-    cur.close()
-    conn.close()
+                # Получение id друга по последней записи
+                cur.execute('SELECT user_id FROM user_links WHERE id = ?', (last_id,))
+                friend_id = cur.fetchone()
 
-def get_new_friend(id): #Получение линка напарника на эту неделю. Передаём id пользователя, для которого хотим получить напарника
-    conn = sqlite3.connect(f'user{id}.sql')
-    cur = conn.cursor()
+                if friend_id and friend_id[0]:
+                    return self.get_username(friend_id[0])
+                else:
+                    return None
+        except sqlite3.Error as e:
+            print(f"Error fetching new friend for user_id {user_id}: {e}")
+            return None
 
-    # cur.execute(f"INSERT INTO user{id} (user_id) VALUES ('%s')" %'23242424') #тест 1
-    # cur.execute(f"INSERT INTO user{id} (user_id) VALUES ('%s')" % '11111111') #тест 1
-    # conn.commit()
+    def get_username(self, user_id):
+        try:
+            with sqlite3.connect('database.sql') as conn:
+                cur = conn.cursor()
 
-    cur.execute(f'SELECT COUNT(*) FROM user{id}')
-    last = cur.fetchall()[0][0]
-    cur.execute(f"SELECT user_id FROM user{id} WHERE id={last}")
-    try:
-        friend_id = cur.fetchall()[0][0]
-        cur.close()
-        conn.close()
+                # Получение имени пользователя
+                cur.execute('SELECT username FROM users WHERE user_id = ?', (user_id,))
+                result = cur.fetchone()
 
-        return get_username(friend_id)
-    except IndexError:
-        return 0
+                return result[0] if result else None
+        except sqlite3.Error as e:
+            print(f"Error fetching username for user_id {user_id}: {e}")
+            return None
 
-    return get_username(friend_id)
-
-def get_username(id):
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
-
-    cur.execute(f'SELECT username FROM users where user_id = {id}')
-    username = cur.fetchall()[0][0]
-
-    cur.close()
-    conn.close()
-
-    return username

@@ -1,5 +1,4 @@
-import algorithm
-import database
+from main import db_facade
 
-for i in range(100):
-        database.add_user(i, i)
+for i in range(1,100):
+        db_facade.add_user(i,i)

@@ -1,0 +1,53 @@
+# Python-specific files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.env
+*.venv
+ENV/
+env/
+venv/
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+
+# PyCharm-specific files
+.idea/
+*.iml
+workspace.xml
+tasks.xml
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# JetBrains Run/Debug Configurations
+*.run.xml
+
+# Byte-compiled and optimized files
+*.py[cod]
+
+# Virtual environment
+.Python
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs
+*.log
+
+# OS-generated files
+.DS_Store
+Thumbs.db

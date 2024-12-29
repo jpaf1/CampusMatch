@@ -1,9 +1,10 @@
 import telebot
-import database
-import algorithm
-
+from database import Database
+from algorithm import PairingAlgorithm
 
 bot = telebot.TeleBot('7994757091:AAHaZ-FjncULD9Q0F34Claq13iDy7E-jpGY')
+
+db_facade = Database()
 
 @bot.message_handler(commands = ['start']) # Ответ на команду /start
 def start(chat):
@@ -31,14 +32,14 @@ def callback_start(callback):
     bot.send_message(callback.message.chat.id, info_str, reply_markup=murkup)
 
     #Добавление пользователя в базу данных
-    id = callback.message.chat.id
+    user_id = callback.message.chat.id
     username = callback.message.chat.username
-    database.add_user(id,username)
+    db_facade.add_user(user_id, username)
 
 @bot.callback_query_handler(func=lambda callback: callback.data == 'meeting') #Ответ на кнопку "Получить линк"
 def callback_linc(callback):
-    linc = database.get_new_friend(callback.message.chat.id)
-    if linc == 0:
+    new_friend_id = db_facade.get_new_friend(callback.message.chat.id)
+    if not new_friend_id:
         murkup = telebot.types.InlineKeyboardMarkup()
         murkup.add(telebot.types.InlineKeyboardButton('Попробовать снова', callback_data='meeting'))
         murkup.add(telebot.types.InlineKeyboardButton('Вернуться в главное меню', callback_data='main'))
@@ -47,7 +48,7 @@ def callback_linc(callback):
     else:
         murkup = telebot.types.InlineKeyboardMarkup()
         murkup.add(telebot.types.InlineKeyboardButton('Вернуться в главное меню', callback_data='main'))
-        info_str = (f'Новые знакомства и возможности ждут тебя!\n\n @{linc}')
+        info_str = (f'Новые знакомства и возможности ждут тебя!\n\n @{new_friend_id}')
         bot.send_message(callback.message.chat.id, info_str, reply_markup=murkup)
 
 @bot.message_handler(commands = ['update']) # Ответ на команду /update
@@ -55,7 +56,7 @@ def update(chat):
     id = chat.from_user.id
     if id == 881088174:
         twice_user = int((chat.text).split()[1])
-        algorithm.alg(twice_user)
+        PairingAlgorithm.match_users(twice_user)
         update_str = 'Список успешно обновлён'
         bot.send_message(chat.chat.id, update_str)
     else:
